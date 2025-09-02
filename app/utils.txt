@@ -22,33 +22,40 @@ def load_data_from_bq(project_id: str, dataset: str, table: str, where: str = No
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     return df
 
-
 def load_and_preprocess(df: pd.DataFrame):
     """
     Convert raw dataframe into Darts TimeSeries objects.
     Schema: series_id_encoded, timestamp, sales, on_promotion, price, category_encoded
+    Combines series_id_encoded and category_encoded to create a unique series ID.
     """
     series_list = []
     covariates_list = []
 
-    for series_id, group in df.groupby("series_id_encoded"):
+    # Create unique series identifier
+    df["unique_series_id"] = df["series_id_encoded"].astype(str) + "_" + df["category_encoded"].astype(str)
+
+    # Group by the new unique_series_id
+    for series_id, group in df.groupby("unique_series_id"):
         group = group.sort_values("timestamp")
 
-        # Target
+        # Set timestamp as index and ensure daily frequency
+        group = group.set_index("timestamp").asfreq("D").fillna(method="ffill").reset_index()
+
+        # Target TimeSeries (sales)
         ts = TimeSeries.from_dataframe(
             group,
             time_col="timestamp",
             value_cols="sales",
-            freq="W"  # adjust if daily/hourly
+            freq="D"
         )
         series_list.append(ts)
 
-        # Covariates (dynamic)
+        # Dynamic covariates TimeSeries (on_promotion, price)
         cov = TimeSeries.from_dataframe(
             group,
             time_col="timestamp",
             value_cols=["on_promotion", "price"],
-            freq="W"
+            freq="D"
         )
         covariates_list.append(cov)
 
