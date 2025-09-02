@@ -14,14 +14,16 @@ def train_model(df, model_dir="models/", forecast_horizon=4):
         hidden_size=16,
         n_epochs=10,
         random_state=42,
+        add_relative_index=True
     )
 
     model.fit(series_scaled, past_covariates=covs_scaled, verbose=True)
 
     # Save model + scalers
     Path(model_dir).mkdir(parents=True, exist_ok=True)
-    model.save(Path(model_dir) / "tft_model.pth.tar")
-
+    
+    model.save(str(Path(model_dir) / "tft_model.pth.tar"))
+    
     with open(Path(model_dir) / "scalers.pkl", "wb") as f:
         pickle.dump((scaler_y, scaler_x), f)
 
