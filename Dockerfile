@@ -1,24 +1,22 @@
-# Use lightweight Python image
+# Use Python slim base
 FROM python:3.11-slim
 
-# Set workdir
 WORKDIR /app
 
-# Install system deps
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
+# Copy requirements and install
 COPY requirements.txt .
-
-# Install Python deps
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app code
-COPY app/ ./app/
-COPY pipeline_forecast.py .
+# Copy project files
+COPY . .
 
-# Default entrypoint
+# Expose port for API (if needed later)
+EXPOSE 8080
+
 ENTRYPOINT ["python", "pipeline_forecast.py"]
