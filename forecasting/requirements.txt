@@ -1,8 +1,0 @@
-u8darts[torch]
-# darts==0.30.0ß
-pandas
-numpy
-scikit-learn
-pyarrow
-google-cloud-storage
-google-cloud-bigquery
